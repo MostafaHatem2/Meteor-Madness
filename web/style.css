@@ -1,0 +1,36 @@
+:root {
+  --mainColor: red;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+}
+
+h1 {
+}
+
+.inputs {
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  position: absolute;
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
+}
+
+.input-group {
+  margin: auto;
+}
+
+.addMyAsteroid {
+}
+
+.choseRealAsteroid {
+}
