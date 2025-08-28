@@ -66,14 +66,13 @@ choseRealAsteroid.addEventListener("click", function () {
   inputGroup.innerHTML = "";
   document.querySelector("h1").innerHTML = "Choose Already Asteroid";
 
-  const url = "https://ssd-api.jpl.nasa.gov/cad.api";
+  const url = "./ssd.json";
   const params = new URLSearchParams({
     "date-min": "2025-08-01",
     "date-max": "2025-08-28",
     "dist-max": "0.05",
     nea: "true",
   });
-  console.log(`${url}?${params.toString()}`);
   fetch(`${url}?${params.toString()}`)
     .then((res) => res.json())
     .then((data) => {
@@ -115,12 +114,12 @@ function runSimulation(asteroid_name, diameter, velocity, latitude, longitude) {
   let result = document.createElement("div");
   result.classList.add("result");
   result.innerHTML = `
-    <h3>Simulation Result</h3>
-    Name: ${asteroid_name} <br>
-    Diameter: ${diameter} km <br>
-    Velocity: ${velocity} km/s <br>
-    Latitude: ${latitude} <br>
-    Longitude: ${longitude}
-  `;
+      <h3>Simulation Result</h3>
+      Name: ${asteroid_name} <br>
+      Diameter: ${diameter} km <br>
+      Velocity: ${velocity} km/s <br>
+      Latitude: ${latitude} <br>
+      Longitude: ${longitude}
+    `;
   inputs.appendChild(result);
 }
