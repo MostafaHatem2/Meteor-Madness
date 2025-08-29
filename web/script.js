@@ -94,10 +94,12 @@ choseRealAsteroid.addEventListener("click", async function () {
       inputGroup.appendChild(select);
 
       if (asteroidList.length > 0) {
-        asteroidList.forEach((asteroidName) => {
+        asteroidList.forEach((asteroid) => {
           let option = document.createElement("option");
-          option.value = asteroidName;
-          option.textContent = asteroidName;
+          option.value = asteroid.name;
+          option.textContent = asteroid.name; // 👈 هنا بيظهر بس الاسم للمستخدم
+          option.dataset.h = asteroid.h; // 👈 مخزن h داخليًا
+          option.dataset.v_inf = asteroid.v_inf; // 👈 مخزن v_inf داخليًا
           select.appendChild(option);
         });
       } else {
@@ -129,16 +131,21 @@ choseRealAsteroid.addEventListener("click", async function () {
       inputGroup.appendChild(launchBtn);
 
       launchBtn.addEventListener("click", () => {
-        const selectedName = select.value;
+        const selectedOption = select.options[select.selectedIndex];
+        const selectedName = selectedOption.value;
         const selectedLatitude = latitude.value;
         const selectedLongitude = longitude.value;
 
+        const h = selectedOption.dataset.h; // من بايثون
+        const v_inf = selectedOption.dataset.v_inf; // من بايثون
+
         callPythonSimulation(
           selectedName,
-          null,
-          null,
+          null, // diameter يفضل null عشان بايثون هيحسب
+          v_inf, // velocity
           selectedLatitude,
-          selectedLongitude
+          selectedLongitude,
+          h // magnitude
         );
       });
     } else {
@@ -149,13 +156,13 @@ choseRealAsteroid.addEventListener("click", async function () {
     inputGroup.innerHTML = `<p class="text-danger">حدث خطأ أثناء تحميل قائمة الكويكبات.</p>`;
   }
 });
-
 async function callPythonSimulation(
   asteroid_name,
   diameter,
   velocity,
   latitude,
-  longitude
+  longitude,
+  h
 ) {
   inputGroup.innerHTML = `<p class="text-info text-center">..........</p>`;
   try {
@@ -164,7 +171,8 @@ async function callPythonSimulation(
       diameter,
       velocity,
       latitude,
-      longitude
+      longitude,
+      h
     );
 
     const resultData = JSON.parse(response);
@@ -174,6 +182,7 @@ async function callPythonSimulation(
     inputGroup.innerHTML = `<p class="text-danger">حدث خطأ أثناء تشغيل المحاكاة.</p>`;
   }
 }
+
 function displaySimulationResults(resultData) {
   inputGroup.innerHTML = "";
 

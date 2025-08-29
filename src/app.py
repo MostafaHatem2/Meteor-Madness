@@ -1,8 +1,10 @@
 
+from math import sqrt
 import webview
 import json
 import os
 import requests
+import math
 from calculations import calculate_mass_and_energy, calculate_impact_effects
 from simulation import generate_map_html
 
@@ -12,76 +14,89 @@ class Api():
     def get_asteroid_list(self):
         url = "https://ssd-api.jpl.nasa.gov/cad.api"
         params = {
-            "dist-min": "0.01",
+            "dist-min": "   0.01",
             "dist-max": "0.05",
             "nea": "true",
         }
         response = requests.get(url, params=params)
-        if response.status_code == 200:
-            data = response.json()
+        if response.status_code != 200:
+            return json.dumps({"error": f"Failed to fetch asteroid list: {response.status_code}"})
+
+        data = response.json()
+
+        if "data" not in data or "fields" not in data:
+            return json.dumps({"error": "No asteroid data found in NASA API response."})
+
+        fields = data["fields"]
+        des_index = fields.index("des")
+        h_index = fields.index("h")
+        v_inf_index = fields.index("v_inf")
+
+        asteroid_info = []
+        for item in data["data"]:
+            if item[h_index] not in (None, "") and item[v_inf_index] not in (None, ""):
+                asteroid_info.append({
+                    "name": item[des_index],
+                    "h": item[h_index],
+                    "v_inf": item[v_inf_index]
+                })
 
 
-            if "data" in data and "fields" in data:
-                fields = data["fields"]
-                des_index = fields.index("des")   
+        return json.dumps(asteroid_info)
 
-                asteroid_names = []
-                for item in data["data"]:
-                    asteroid_names.append(item[des_index])
 
-                print("Asteroids:", asteroid_names)
-                return json.dumps(asteroid_names)
-            else:
-                print("No asteroid data found")
-                return None
-        else:
-            print("Error: ", response.status_code)
-            return json.dumps({"error": "Failed to fetch asteroid list from NASA API."})
+    def run_simulation(
+    self,
+    asteroid_name=None,
+    diameter=None,
+    velocity=None,
+    lat=None,
+    long=None,
+    h_value=None
+):  
+     error_message = None
+     asteroid_name = asteroid_name.replace(" ", "") if asteroid_name else None
+
+     # Latitude & Longitude check
+     lat = float(lat) if lat not in (None, "") else 0.0
+     long = float(long) if long not in (None, "") else 0.0
+
+     pv = 0.15
+     D = 1329
+
+     try:
+         if asteroid_name and h_value not in (None, "") and velocity not in (None, ""):
+             # حساب القطر من magnitude
+             actual_diameter_m = (D / math.sqrt(pv)) * (10**(-float(h_value)/5))
+             actual_velocity_ms = float(velocity) * 1000
+
+         elif (not asteroid_name) and (diameter not in (None, "")) and (velocity not in (None, "")):
+             # لو المستخدم دخل القطر والسرعة بنفسه
+             actual_diameter_m = float(diameter) * 1000
+             actual_velocity_ms = float(velocity) * 1000
+
+         else:
+             error_message = "Invalid input parameters"
+             return json.dumps({"error": error_message})
+
+         # الحسابات
+         mass_energy_results = calculate_mass_and_energy(actual_diameter_m, actual_velocity_ms)
+         impact_effects = calculate_impact_effects(mass_energy_results["energy"])
+         map_html = generate_map_html(lat, long, impact_effects["blast_radius_km"])
         
+         final_results = {
+             "mass_kg": mass_energy_results["mass"],
+             "energy_joules": mass_energy_results["energy"],
+             "megatons_tnt": impact_effects["megatons_tnt"],
+             "crater_diameter_km": impact_effects["crater_diameter_km"],
+             "blast_radius_km": impact_effects["blast_radius_km"],
+             "map_html": map_html
+         }
+         return json.dumps(final_results)
 
+     except Exception as e:
+         return json.dumps({"error": str(e)})
 
-#     def run_simulation(self, asteroid_name, diameter, velocity, lat, lon):
-
-#         # Step 1: mass & energy
-#         results = calculate_mass_and_energy(diameter, velocity)
-#         print("Mass and Energy:", results)
-
-#         # Step 2: impact effects
-#         effects = calculate_impact_effects(results["energy"])
-#         print("Impact Effects:", effects)
-
-#         # Step 3: generate map html
-#         html = generate_map_html(lat, lon)
-#         print("Generated HTML:\n", html)
-#         if(asteroid_name != ""):
-#             url = "https://ssd-api.jpl.nasa.gov/sbdb.api"
-#             params = {
-#                 "sstr": asteroid_name,
-#                 "ca-data": 1,
-#                 "phys-par": 1,
-#             }
-#             response = requests.get(url, params=params)
-#             if response.status_code == 200:
-#                 data = response.json()
-#                 diameter = None
-
-#                 if("phys-par" in data):
-#                     for item in data["phys-par"]:
-#                         if item.get("name") == "diameter":
-#                             diameter = item.get("value")
-#                             break
-                
-#                 velocity = None
-#                 if "ca-data" in data and len(data["ca-data"]) > 0:
-#                     velocity = data["ca-data"][0].get("v_inf")
-                
-#                 print(f"Asteroid: {data.get('object', {}).get('fullname')}")
-#                 print(f"Diameter: {diameter} km")
-#                 print(f"Velocity: {velocity} km/s")
-#             else:
-#                 print("Error: ", response.status_code)
-
-    
 
 def start_app():
     api_handler = Api()

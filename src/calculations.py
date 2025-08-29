@@ -1,8 +1,6 @@
 # calculations.py
-def calculate_mass_and_energy(diameter_km, velocity_kms):
-    mass = diameter_km * 1000   # تبسيط: الكتلة = القطر * 1000
-    energy = mass * velocity_kms
-    return {"mass": mass, "energy": energy}
+def calculate_mass_and_energy(actual_diameter_m, veactual_velocity_mslocity_kms):
+    print(f"from calcution {actual_diameter_m}")
 
 def calculate_impact_effects(kinetic_energy_joules):
     values = {
